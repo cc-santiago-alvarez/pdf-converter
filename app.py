@@ -23,10 +23,13 @@ def convert():
         
         output_path = convert_file_to_pdf(input_path, "")
         
-
-        return jsonify({'success': True, 'pdf_path': output_path}), 200
+        response = (jsonify({'success': True, 'pdf_path': output_path}))
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:8063'  # Origen permitido
+        return response
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        response = (jsonify({'error': str(e)}), 500)
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:8063'
+        return response
 
 if __name__ == '__main__':
     app.run(debug=True, host='10.2.20.113', port=25268)
