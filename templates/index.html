@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/index.css">
+    <title>PDF Converter</title>
+</head>
+<body>
+    <h1>Conversor de Archivos a PDF</h1>
+    <form id="upload-form" action="/convert" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".docx,.xlsx,.pptx,.txt,.svg,.png,.jpg,.jpeg">
+        <button type="submit">Convertir</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const resultDiv = document.getElementById('result');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/convert', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                resultDiv.innerHTML = `<a href="${result.pdf_path}" download>Descargar PDF</a>`;
+            } else {
+                resultDiv.textContent = `Error: ${result.error}`;
+            }
+        });
+    </script>
+</body>
+</html>
