@@ -1,5 +1,7 @@
 import os
 import sys
+import io
+from typing import BinaryIO
 from formats.docx.docx import convert_docx_to_pdf
 from formats.xlsx.xlsx import convert_xlsx_to_pdf
 from formats.pptx.pptx import convert_pptx_to_pdf
@@ -47,6 +49,42 @@ def convert_file_to_pdf(input_path: str, output_path: str = "") -> str:
         error_message = f"CONVERSION_ERROR: {str(e)}"
         print(error_message)
         raise ValueError(error_message)
+
+# def convert_file_buffer_to_pdf(file_buffer: BinaryIO, filename: str) -> bytes:
+#     """
+#     Convierte un archivo en buffer (stream) a PDF y devuelve el PDF como bytes.
+
+#     :param file_buffer: Archivo en buffer (BinaryIO o BytesIO).
+#     :param filename: Nombre del archivo original para identificar su tipo.
+#     :return: El PDF generado como bytes.
+#     """
+#     file_extension = filename.lower().split('.')[-1]
+#     output_buffer = io.BytesIO()  # Donde almacenaremos el PDF generado
+
+#     try:
+#         if file_extension == "docx":
+#             # Convertir DOCX a PDF
+#             convert_docx_to_pdf(file_buffer, output_buffer)
+#         elif file_extension == "xlsx":
+#             # Convertir XLSX a PDF
+#             convert_xlsx_to_pdf(file_buffer, output_buffer)
+#         elif file_extension == "pptx":
+#             # Convertir PPTX a PDF
+#             convert_pptx_to_pdf(file_buffer, output_buffer)
+#         elif file_extension in ["png", "jpg", "jpeg", "svg"]:
+#             # Convertir imágenes a PDF
+#             convert_image_to_pdf(file_buffer, output_buffer)
+#         elif file_extension == "txt":
+#             # Convertir TXT a PDF
+#             convert_txt_to_pdf(file_buffer, output_buffer)
+#         else:
+#             raise ValueError(f"Formato de archivo no soportado: {file_extension}")
+#     except Exception as e:
+#         raise ValueError(f"Error al convertir archivo: {e}")
+
+#     # Retornar el PDF generado como bytes
+#     output_buffer.seek(0)
+#     return output_buffer.read()
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

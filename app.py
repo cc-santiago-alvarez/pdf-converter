@@ -1,5 +1,7 @@
 import os
+import io
 import tempfile
+from werkzeug.datastructures import FileStorage
 from flask import Flask, request, jsonify, send_file, render_template
 from flask_cors import CORS
 from convert import convert_file_to_pdf
@@ -19,10 +21,10 @@ def home():
 @app.route('/api/v1/convert/convert-to-pdf', methods=['POST'])
 def convert():
     try:
-        if 'file[0]' not in request.files:
+        if 'file' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
-        uploaded_file = request.files['file[0]']
+        uploaded_file = request.files['file']
         input_path = os.path.join(TEMP_FOLDER, uploaded_file.filename)
         uploaded_file.save(input_path)
 
@@ -36,7 +38,6 @@ def convert():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
@@ -53,7 +54,31 @@ def download_file(filename):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+    # @app.route('/api/v1/convert/convert-to-pdf', methods=['POST'])
+# def convert_buffer_to_pdf():
+#     try:
+#         # Asegúrate de que el archivo fue subido
+#         if 'file' not in request.files:
+#             return jsonify({"error": "No se encontró el archivo"}), 400
 
+#         uploaded_file = request.files['file']  # type: FileStorage
+#         filename = uploaded_file.filename
+
+#         # Convertir buffer a PDF
+#         file_buffer = io.BytesIO(uploaded_file.read())
+#         pdf_data = convert_file_buffer_to_pdf(file_buffer, filename)
+
+#         # Devolver el PDF generado como respuesta
+#         response = send_file(
+#             io.BytesIO(pdf_data),
+#             as_attachment=True,
+#             download_name=f"{filename.rsplit('.', 1)[0]}.pdf",
+#             mimetype="application/pdf"
+#         )
+#         return response
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='10.2.20.113', port=25268)
