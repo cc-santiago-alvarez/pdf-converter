@@ -93,7 +93,6 @@ if __name__ == '__main__':
 
     input_file = sys.argv[1]
 
-    # Llama a la función de conversión y obtiene la ruta del PDF
     try:
         pdf_path = convert_file_to_pdf(input_file)
         print(f"PDF generado en: {pdf_path}")
