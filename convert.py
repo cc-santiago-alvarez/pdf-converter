@@ -9,40 +9,31 @@ from formats.images.images import convert_image_to_pdf
 from formats.txt.txt import convert_txt_to_pdf
 from flask import jsonify
 
-def download_pdf():
-    return os.path.join(os.path.expanduser('~'), 'Downloads')
-
-def generate_unique_filename(base_path, base_name, extension):
-    counter = 1
-    new_path = os.path.join(base_path, f"{base_name}{extension}")
-    while os.path.exists(new_path):
-        new_path = os.path.join(base_path, f"{base_name}_{counter}{extension}")
-        counter += 1
-    return new_path
-
-def convert_file_to_pdf(input_path: str, output_path: str = "") -> str:
+def convert_file_to_pdf(input_path: BinaryIO, filename: str) -> io.BytesIO:
     try:
-        ext = os.path.splitext(input_path)[1].lower()
-        base_name = os.path.splitext(os.path.basename(input_path))[0]
+        # ext = os.path.splitext(input_path)[1].lower()
+        # base_name = os.path.splitext(os.path.basename(input_path))[0]
 
-        downloads = download_pdf()
-        output_path = generate_unique_filename(downloads, base_name, '.pdf')
+        # downloads = download_pdf()
+        # output_path = generate_unique_filename(downloads, base_name, '.pdf')
+        ext = os.path.splitext(filename)[1].lower()
+        pdf_buffer = io.BytesIO()  # Crear un buffer en memoria para el PDF
 
         if ext == '.docx':
-            convert_docx_to_pdf(input_path, output_path)
+            convert_docx_to_pdf(input_path, pdf_buffer)
         elif ext == '.xlsx':
-            convert_xlsx_to_pdf(input_path, output_path)
+            convert_xlsx_to_pdf(input_path, pdf_buffer)
         elif ext == '.pptx':
-            convert_pptx_to_pdf(input_path, output_path)
+            convert_pptx_to_pdf(input_path, pdf_buffer)
         elif ext == '.txt':
-            convert_txt_to_pdf(input_path, output_path)
+            convert_txt_to_pdf(input_path, pdf_buffer)
         elif ext in ['.svg', '.png', '.jpg', '.jpeg']:
-            convert_image_to_pdf(input_path, output_path)
+            convert_image_to_pdf(input_path, pdf_buffer)
         else:
             raise ValueError(f"INVALID_FILE_FORMAT: {ext}")
 
-        print(f"Archivo PDF generado en: {output_path}")
-        return output_path
+        print(f"Archivo PDF generado en: {pdf_buffer}")
+        return pdf_buffer
 
 
     except Exception as e:
