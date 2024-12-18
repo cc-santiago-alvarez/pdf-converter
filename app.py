@@ -21,7 +21,7 @@ def convert():
     VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg']
 
     try:
-        if 'file' not in request.files:
+        if 'file[0]' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
         results = []
@@ -69,15 +69,6 @@ def convert():
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': str(e)}), 500
-
-
-"""
-    Args:
-        pdf_path (str): La ruta del archivo PDF generado.
-
-    Returns:
-        bytes: El contenido del PDF como un buffer de bytes.
-    """
 
 def convert_pdf_to_buffer(pdf_path: str) -> bytes:
     try:
