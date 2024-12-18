@@ -1,6 +1,9 @@
 import os
+import io
 import tempfile
-from flask import Flask, request, jsonify, send_file, render_template
+import base64
+from werkzeug.datastructures import FileStorage
+from flask import Flask, request, jsonify, send_file, render_template, url_for
 from flask_cors import CORS
 from convert import convert_file_to_pdf
 
@@ -8,9 +11,6 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # Asegúrate de permitir el origen necesario
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-# Carpeta temporal para almacenar archivos
-TEMP_FOLDER = "./temp/"
-os.makedirs(TEMP_FOLDER, exist_ok=True)
 
 @app.route('/')
 def home():
@@ -18,42 +18,75 @@ def home():
 
 @app.route('/api/v1/convert/convert-to-pdf', methods=['POST'])
 def convert():
+    VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg']
+
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
-        uploaded_file = request.files['file']
-        input_path = os.path.join(TEMP_FOLDER, uploaded_file.filename)
-        uploaded_file.save(input_path)
+        results = []
+        count = 0
 
-        output_path = convert_file_to_pdf(input_path)
+        for _, uploaded_file in request.files.items():
+            count += 1
+            print(f"Procesando archivo {count}: {uploaded_file.filename}")
 
-        if not isinstance(output_path, str):
-            raise ValueError(f"La función convert_file_to_pdf devolvió un valor inesperado: {output_path}")
+            original_filename = uploaded_file.filename
+            original_name, extension = os.path.splitext(original_filename)
+            extension = extension.lower()
 
-        file_url = f"http://{request.host}/download/{os.path.basename(output_path)}"
-        return jsonify({'success': True, 'pdf_url': file_url})
+            if extension not in VALID_EXTENSIONS:
+                return jsonify({'error': f"Formato no soportado: {extension}"}), 400
+
+            # Crear archivo temporal con la extensión original
+            with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
+                temp_file.write(uploaded_file.read())
+                temp_file_path = temp_file.name
+
+            pdf_output_path = None
+
+            try:
+                pdf_output_path = convert_file_to_pdf(temp_file_path)
+
+                pdf_buffer = convert_pdf_to_buffer(pdf_output_path)
+
+                results.append({
+                    'file': list(pdf_buffer),
+                    'originalName': f"{original_name}.pdf"
+                })
+
+            finally:
+                os.remove(temp_file_path)
+                if pdf_output_path and os.path.exists(pdf_output_path):
+                    os.remove(pdf_output_path)
+
+        return jsonify({
+            'success': True,
+            'count': len(results),
+            'files': results
+        })
 
     except Exception as e:
+        print("Error:", str(e))
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/download/<filename>', methods=['GET'])
-def download_file(filename):
+"""
+    Args:
+        pdf_path (str): La ruta del archivo PDF generado.
+
+    Returns:
+        bytes: El contenido del PDF como un buffer de bytes.
+    """
+
+def convert_pdf_to_buffer(pdf_path: str) -> bytes:
     try:
-
-        file_path = os.path.join(TEMP_FOLDER, filename)
-
-        if not os.path.exists(file_path):
-            return jsonify({'error': 'Archivo no encontrado'}), 404
-
-        print(f"Enviando archivo: {file_path}", flush=True)
-
-        return send_file(file_path, as_attachment=True)
-
+        with open(pdf_path, 'rb') as pdf_file:
+            return pdf_file.read()
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        raise ValueError(f"ERROR_READING_PDF: {e}")
 
 
+       
 if __name__ == '__main__':
-    app.run(debug=True, host='10.2.20.113', port=25268)
+    app.run(debug=True, host='0.0.0.0', port=25268)
