@@ -9,7 +9,14 @@ from formats.txt.txt import convert_txt_to_pdf
 
 def convert_file_to_pdf(input_path: str) -> str:
     """
-    Convierte un archivo al formato PDF. Usa un archivo temporal para el PDF de salida.
+    Convierte un archivo al formato PDF.
+
+    Parámetros:
+    - input_path (str): Ruta del archivo a convertir.
+
+    Retorna:
+    - str: Ruta del archivo PDF generado.
+
     """
     try:
         ext = os.path.splitext(input_path)[1].lower()  # Obtén la extensión del archivo
@@ -19,7 +26,6 @@ def convert_file_to_pdf(input_path: str) -> str:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
             output_path = temp_pdf.name  # Ruta del archivo temporal
 
-        # Llama a la función adecuada según el tipo de archivo
         if ext == '.docx':
             convert_docx_to_pdf(input_path, output_path)
         elif ext == '.xlsx':

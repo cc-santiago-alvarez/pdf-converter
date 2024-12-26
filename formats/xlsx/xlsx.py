@@ -362,16 +362,23 @@
 import io
 from openpyxl import load_workbook
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer
-from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from openpyxl.utils import get_column_letter
 from reportlab.lib.units import cm
 
 def get_column_widths(sheet, max_width):
+    """
+    Calcula los anchos de las columnas de una hoja de Excel y los escala para ajustarlos a un ancho máximo.
 
+    Parámetros:
+    - sheet: Hoja de cálculo activa (openpyxl Worksheet).
+    - max_width: Ancho máximo permitido para todas las columnas.
+
+    Retorna:
+    - list[float]: Lista con los anchos escalados de cada columna.
+    """
     column_widths = []
     for col in sheet.columns:
         width = sheet.column_dimensions[col[0].column_letter].width
@@ -385,7 +392,18 @@ def get_column_widths(sheet, max_width):
         column_widths = [width * scale for width in column_widths]
 
     return column_widths
+
 def get_row_heights(sheet, max_height=50):
+    """
+    Calcula las alturas de las filas de una hoja de Excel, ajustándolas a un máximo.
+
+    Parámetros:
+    - sheet: Hoja de cálculo activa (openpyxl Worksheet).
+    - max_height: Altura máxima permitida para las filas.
+
+    Retorna:
+    - list[float]: Lista con las alturas ajustadas de las filas.
+    """
     row_heights = []
     for row in sheet.iter_rows():
         height = sheet.row_dimensions[row[0].row].height
@@ -396,8 +414,20 @@ def get_row_heights(sheet, max_height=50):
         row_heights.append(height)
 
     return row_heights
-# Función para procesar celdas y ajustarlas a tamaños de hoja
+
 def process_cell(cell, centered_style, max_characters=50):
+    """
+    Procesa el contenido de una celda y lo ajusta a un formato apropiado para el PDF.
+
+    Parámetros:
+    - cell: Celda a procesar (openpyxl Cell).
+    - centered_style: Estilo centrado para aplicar a textos largos (ReportLab ParagraphStyle).
+    - max_characters: Número máximo de caracteres permitidos en una celda.
+
+    Retorna:
+    - ReportLab Image o Paragraph: Contenido procesado como una imagen o un párrafo.
+    - str: Cadena vacía si la celda está vacía.
+    """
     if cell.data_type == 'i':  # Image
         img = Image(io.BytesIO(cell.value))
         img.drawHeight = 50  
@@ -411,6 +441,19 @@ def process_cell(cell, centered_style, max_characters=50):
     return ''
 
 def convert_xlsx_to_pdf(input_path: str, output_path: str) -> None:
+    """
+    Convierte un archivo XLSX (Excel) al formato PDF.
+
+    Parámetros:
+    - input_path (str): Ruta del archivo XLSX de entrada.
+    - output_path (str): Ruta donde se generará el archivo PDF.
+
+    Retorna:
+    - None.
+
+    Lanza:
+    - ValueError: Si ocurre un error durante la conversión.
+    """
     wb = load_workbook(input_path)
     sheet = wb.active
     sheet_width = 0
@@ -427,6 +470,7 @@ def convert_xlsx_to_pdf(input_path: str, output_path: str) -> None:
         if row_height is None:
             row_height = 15  
         sheet_height += row_height
+        
     # Convertir las dimensiones a puntos (1 punto = 1/72 pulgadas)
     page_width = sheet_width * 0.5  # Aproximación de unidades de Excel a cm
     page_height = sheet_height * 0.05  # Aproximación de unidades de Excel a cm
@@ -442,6 +486,7 @@ def convert_xlsx_to_pdf(input_path: str, output_path: str) -> None:
         topMargin=margin_top,
         bottomMargin=margin_bottom
     )
+    
     data = []
     styles = getSampleStyleSheet()
     centered_style = ParagraphStyle('centered', parent=styles['Normal'], alignment=TA_CENTER, wordWrap='CJK')
@@ -454,6 +499,7 @@ def convert_xlsx_to_pdf(input_path: str, output_path: str) -> None:
         data.append(processed_row)
     column_widths = get_column_widths(sheet, page_width * cm - (margin_left + margin_right))
     table = Table(data, colWidths=column_widths, repeatRows=1)
+    
     style = TableStyle([
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -465,6 +511,7 @@ def convert_xlsx_to_pdf(input_path: str, output_path: str) -> None:
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ('FONTSIZE', (0, 0), (-1, -1), 8),
     ])
+    
     # Combinar celdas
     for merged_range in sheet.merged_cells.ranges:
         min_col, min_row, max_col, max_row = merged_range.bounds

@@ -3,11 +3,22 @@ from reportlab.lib.colors import HexColor
 from reportlab.lib.units import inch
 
 def extract_text_properties(shape,xml,nsmap):
+    """
+    Extrae las propiedades de texto de una forma en una diapositiva de PowerPoint.
+
+    Parámetros:
+    - shape: Objeto de forma (shape) en la diapositiva.
+    - xml: Contenido XML del shape.
+    - nsmap: Mapa de espacios de nombres para el XML.
+
+    Retorna:
+    - list[dict]: Lista con propiedades de texto (nombre de fuente, tamaño, color, etc.).
+    """
     if not hasattr(shape, 'text_frame'):
         return None
     properties = []
     
-    # Parse XML para obtener detalles de la fuente
+    # Procesa el XML para obtener detalles de las fuentes.
     root = ET.fromstring(shape.element.xml)
     #print(f'\n====size===={shape.element.xml}\n')
     nsmap = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
@@ -19,13 +30,13 @@ def extract_text_properties(shape,xml,nsmap):
             continue
 
         align = p_xml.find('.//a:pPr', nsmap)
-        alignment = 0 
+        alignment = 0 # Alineación por defecto: Izquierda.
         if align is not None:
             algn_value = align.get('algn', '0')
             if algn_value == 'ctr':
-                alignment = 1  # Center
+                alignment = 1  # Centro
             elif algn_value == 'r':
-                alignment = 2  # Right
+                alignment = 2  # Derecha
             else:
                 try:
                     alignment = int(algn_value)
@@ -37,7 +48,7 @@ def extract_text_properties(shape,xml,nsmap):
             if r_xml is None:
                 continue
 
-            # Get font properties
+            # Extrae las propiedades de la fuente.
             font_props = r_xml.find('.//a:rPr', nsmap)
             if font_props is None:
                 continue

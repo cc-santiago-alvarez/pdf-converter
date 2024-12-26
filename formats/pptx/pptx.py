@@ -11,21 +11,53 @@ from reportlab.lib.colors import black
 from reportlab.lib.units import inch
 
 def extract_image_from_shape(shape, pdf, slide_height):
-    if shape.shape_type == 13: 
-        img_stream = BytesIO(shape.image.blob)
-        img = PILImage.open(img_stream)
+    """
+    Extrae imágenes de un shape de PowerPoint y las dibuja en el PDF.
+
+    Parámetros:
+    - shape: Forma de la diapositiva de PowerPoint.
+    - pdf: Objeto Canvas para generar el PDF.
+    - slide_height: Altura de la diapositiva en puntos.
+
+    Retorna:
+    - None.
+    """
+    if shape.shape_type == 13:  # Si el shape es una imagen.
+        img_stream = BytesIO(shape.image.blob)  # Obtiene los datos binarios de la imagen.
+        img = PILImage.open(img_stream) 
         left, top, width, height = get_shape_position(shape, slide_height)
         pdf.drawInlineImage(img, left, top - height, width, height)
 
+
 def extract_background_image(slide):
+    """
+    Extrae la imagen de fondo de una diapositiva, si existe.
+
+    Parámetros:
+    - slide: Objeto de la diapositiva de PowerPoint.
+
+    Retorna:
+    - PIL.Image: Imagen de fondo.
+    - None: Si no hay fondo.
+    """
     background = slide.background
-    if background.fill.type == 6:  # Background con imagen
+    if background.fill.type == 6:  # Verifica si el fondo tiene una imagen.
         image = background.fill.picture.image
-        image_stream = BytesIO(image.blob)
-        return PILImage.open(image_stream)
+        image_stream = BytesIO(image.blob)  # Obtiene los datos binarios de la imagen.
+        return PILImage.open(image_stream)  # Retorna la imagen como un objeto PIL.
     return None
 
 def extract_table_from_shape(shape):
+    """
+    Extrae los datos de una tabla de un shape de PowerPoint.
+
+    Parámetros:
+    - shape: Forma que contiene una tabla.
+
+    Retorna:
+    - list[list[str]]: Lista de filas con celdas como cadenas de texto.
+    - None: Si el shape no contiene una tabla.
+    """
     if shape.has_table:
         table_data = []
         for row in shape.table.rows:
@@ -35,17 +67,29 @@ def extract_table_from_shape(shape):
     return None
 
 def draw_text_with_properties(pdf, text_props, left, top, width, height):
+    """
+    Dibuja texto en el PDF con las propiedades específicas de texto.
+
+    Parámetros:
+    - pdf: Objeto Canvas del PDF.
+    - text_props: Lista de propiedades del texto (fuente, tamaño, color, etc.).
+    - left, top: Coordenadas de la posición inicial del texto.
+    - width, height: Ancho y alto del área de texto.
+
+    Retorna:
+    - float: Posición vertical actual después de dibujar el texto.
+    """
     total_height = sum(prop.get('font_size', 12) * 1.2 for prop in text_props)
-    
-    # Start from the top of the text box
     current_y = top
     
+    # Ajusta la posición vertical según la alineación.
     vertical_alignment = text_props[0].get('vertical_alignment', 0)
     if vertical_alignment == 1:  # Middle
         current_y = top - (height - total_height) / 2
     elif vertical_alignment == 2:  # Bottom
         current_y = top - height + total_height
     
+    # Itera sobre las propiedades y dibuja cada párrafo.
     for prop in text_props:
         font_name = prop.get('font_name', 'Helvetica')
         if prop.get('bold') and prop.get('italic'):
@@ -81,17 +125,29 @@ def draw_text_with_properties(pdf, text_props, left, top, width, height):
         )
 
         para = Paragraph(prop.get('text', ''), style)
-        para.wrapOn(pdf, width, height)
+        para.wrapOn(pdf, width, height)  # Ajusta el texto dentro del ancho/alto disponibles.
         para.drawOn(pdf, left, current_y - para.height)
-        current_y -= para.height
+        current_y -= para.height  # Actualiza la posición vertical.
 
     return current_y
 
 def convert_pptx_to_pdf(input_path: str, output_path: str):
-    prs = Presentation(input_path)
-    slide_width = prs.slide_width / 914400 * inch
-    slide_height = prs.slide_height / 914400 * inch
-    
+    """
+    Convierte un archivo PPTX al formato PDF.
+
+    Parámetros:
+    - input_path (str): Ruta del archivo PPTX de entrada.
+    - output_path (str): Ruta donde se generará el archivo PDF.
+
+    Retorna:
+    - None.
+
+    Lanza:
+    - ValueError: Si ocurre un error durante la conversión.
+    """
+    prs = Presentation(input_path) 
+    slide_width = prs.slide_width / 914400 * inch  # Convierte el ancho de la diapositiva a puntos.
+    slide_height = prs.slide_height / 914400 * inch  # Convierte la altura de la diapositiva a puntos.
     pdf = canvas.Canvas(output_path, pagesize=(slide_width, slide_height))
     
     for slide in prs.slides:
@@ -110,6 +166,6 @@ def convert_pptx_to_pdf(input_path: str, output_path: str):
             elif shape.shape_type == 13:  # Picture
                 extract_image_from_shape(shape, pdf, slide_height)
         
-        pdf.showPage()
+        pdf.showPage() # Crea una nueva página en el PDF.
     
-    pdf.save()
+    pdf.save() # Guarda el archivo PDF.
