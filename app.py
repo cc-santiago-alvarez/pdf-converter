@@ -3,7 +3,7 @@ import io
 import tempfile
 import base64
 from werkzeug.datastructures import FileStorage
-from flask import Flask, request, jsonify, send_file, render_template, url_for
+from flask import Flask, request, jsonify, send_file, render_template, url_for, Response
 from flask_cors import CORS
 from convert import convert_file_to_pdf
 
@@ -21,6 +21,9 @@ def convert():
     VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg']
 
     try:
+        response_type =  request.args.get('responseType', 'json')
+        cond_response_file = response_type == 'file'
+
         if 'file' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
@@ -51,7 +54,7 @@ def convert():
                 pdf_buffer = convert_pdf_to_buffer(pdf_output_path)
 
                 results.append({
-                    'file': list(pdf_buffer),
+                    'file': pdf_buffer if cond_response_file else list(pdf_buffer),
                     'originalName': f"{original_name}.pdf"
                 })
 
@@ -59,6 +62,19 @@ def convert():
                 os.remove(temp_file_path)
                 if pdf_output_path and os.path.exists(pdf_output_path):
                     os.remove(pdf_output_path)
+        
+        if cond_response_file:
+            return Response(
+                results[0].get('file'),
+                mimetype="application/pdf;charset=UTF-8",
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/pdf;charset=UTF-8",
+                    "Content-Disposition": 'inline; filename=' + results[0].get('originalName'),
+                    "Content-Transfer-Encoding": 'binary'
+                },
+                status=201
+            )
 
         return jsonify({
             'success': True,
