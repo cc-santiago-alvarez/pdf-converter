@@ -1,31 +1,25 @@
 import os
+import tempfile
 import sys
 from formats.docx.docx import convert_docx_to_pdf
 from formats.xlsx.xlsx import convert_xlsx_to_pdf
 from formats.pptx.pptx import convert_pptx_to_pdf
 from formats.images.images import convert_image_to_pdf
 from formats.txt.txt import convert_txt_to_pdf
-from flask import jsonify
 
-def download_pdf():
-    return os.path.join(os.path.expanduser('~'), 'Downloads')
-
-def generate_unique_filename(base_path, base_name, extension):
-    counter = 1
-    new_path = os.path.join(base_path, f"{base_name}{extension}")
-    while os.path.exists(new_path):
-        new_path = os.path.join(base_path, f"{base_name}_{counter}{extension}")
-        counter += 1
-    return new_path
-
-def convert_file_to_pdf(input_path: str, output_path: str = "") -> str:
+def convert_file_to_pdf(input_path: str) -> str:
+    """
+    Convierte un archivo al formato PDF. Usa un archivo temporal para el PDF de salida.
+    """
     try:
-        ext = os.path.splitext(input_path)[1].lower()
+        ext = os.path.splitext(input_path)[1].lower()  # Obtén la extensión del archivo
         base_name = os.path.splitext(os.path.basename(input_path))[0]
+        
+        # Crea un archivo temporal para el PDF de salida
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+            output_path = temp_pdf.name  # Ruta del archivo temporal
 
-        downloads = download_pdf()
-        output_path = generate_unique_filename(downloads, base_name, '.pdf')
-
+        # Llama a la función adecuada según el tipo de archivo
         if ext == '.docx':
             convert_docx_to_pdf(input_path, output_path)
         elif ext == '.xlsx':
@@ -40,8 +34,7 @@ def convert_file_to_pdf(input_path: str, output_path: str = "") -> str:
             raise ValueError(f"INVALID_FILE_FORMAT: {ext}")
 
         print(f"Archivo PDF generado en: {output_path}")
-        return output_path
-
+        return output_path  # Devuelve la ruta del archivo temporal
 
     except Exception as e:
         error_message = f"CONVERSION_ERROR: {str(e)}"

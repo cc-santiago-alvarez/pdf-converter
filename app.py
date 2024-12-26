@@ -21,7 +21,7 @@ def convert():
     VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg']
 
     try:
-        if 'file[0]' not in request.files:
+        if 'file' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
         results = []
