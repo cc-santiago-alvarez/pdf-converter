@@ -41,9 +41,9 @@ def convert():
     try:
         # Obtiene el tipo de respuesta esperado (JSON por defecto o archivo directo)
         response_type =  request.args.get('responseType', 'json')
-        cond_response_file = response_type == 'file[0]'
+        cond_response_file = response_type == 'file'
 
-        if 'file[0]' not in request.files:
+        if 'file' not in request.files:
             return jsonify({'error': 'No se encontró el campo "file".'}), 400
 
         results = []
@@ -51,8 +51,6 @@ def convert():
 
         for _, uploaded_file in request.files.items():
             count += 1
-            print(f"Procesando archivo {count}: {uploaded_file.filename}")
-
             original_filename = uploaded_file.filename
             original_name, extension = os.path.splitext(original_filename)
             extension = extension.lower()
@@ -74,7 +72,7 @@ def convert():
 
                 results.append({
                     'file': pdf_buffer if cond_response_file else list(pdf_buffer),
-                    'originalName': f"{original_name}.pdf"
+                    'originalName': f"{original_name}"
                 })
 
             finally:
@@ -85,17 +83,21 @@ def convert():
         
         # Si se solicita como archivo, retorna el PDF directamente
         if cond_response_file:
-            return Response(
-                results[0].get('file'),
-                mimetype="application/pdf;charset=UTF-8",
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Type": "application/pdf;charset=UTF-8",
-                    "Content-Disposition": 'inline; filename=' + results[0].get('originalName'),
-                    "Content-Transfer-Encoding": 'binary'
-                },
-                status=201
-            )
+            pdf_buffer = results[0].get('file')
+            original_name = results[0].get('originalName')
+
+    # Forzar la descarga con el nombre correcto y MIME type
+        return Response(
+        pdf_buffer,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{original_name}"',
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/pdf;charset=UTF-8",
+            "Content-Transfer-Encoding": 'binary'
+        },
+        status=201
+    )
 
         return jsonify({
             'success': True,
