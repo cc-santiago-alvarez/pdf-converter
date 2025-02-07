@@ -36,7 +36,11 @@ brew install cairo pango gdk-pixbuf libffi libxml2 libxslt jpeg
 ### Dependencias de Python
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
+```
+#### Si no funciona pip install -r requirements.txt
+```bash
+pip3 install Pillow reportlab openpyxl python-pptx svglib flask flask-cors python-docx weasyprint lxml
 ```
 
 ## Instalación y Uso
@@ -107,16 +111,16 @@ salvarsa-pdf-converter/
 POST /api/v1/convert/convert-to-pdf
 ```
 
+### Parametros(opcional)
+
+   - Content-Type: application/pdf
+   - Content-Disposition: attachment; filename="archivo.pdf"
+
+
 ### Ejemplo con cURL
 
 ```bash
 curl -X POST -F "file=@documento.docx" http://localhost:25268/api/v1/convert/convert-to-pdf
-```
-
-### Parámetros Opcionales
-
-```http
-?responseType=file  # Devuelve el PDF directamente en lugar de JSON
 ```
 
 ## Conversión de Formatos Soportados
@@ -156,8 +160,3 @@ Iniciar la aplicación con:
 ```bash
 FLASK_DEBUG=1 flask run --host=0.0.0.0 --port=25268
 ```
-
-## Licencia
-
-MIT License - Ver [LICENSE](LICENSE) para más detalles.
-
