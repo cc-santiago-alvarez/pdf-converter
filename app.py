@@ -91,7 +91,7 @@ def convert():
         pdf_buffer,
         mimetype="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="{original_name}"',
+            "Content-Disposition": f'attachment; filename="{original_name}.pdf"',
             "Access-Control-Allow-Origin": "*",
             "Content-Type": "application/pdf;charset=UTF-8",
             "Content-Transfer-Encoding": 'binary'

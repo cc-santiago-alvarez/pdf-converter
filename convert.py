@@ -24,7 +24,7 @@ def convert_file_to_pdf(input_path: str) -> str:
         
         # Crea un archivo temporal para el PDF de salida
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-            output_path = temp_pdf.name  # Ruta del archivo temporal
+            output_path = temp_pdf.name
 
         if ext == '.docx':
             convert_docx_to_pdf(input_path, output_path)
