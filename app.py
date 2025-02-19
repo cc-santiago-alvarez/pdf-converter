@@ -6,6 +6,10 @@ from werkzeug.datastructures import FileStorage
 from flask import Flask, request, jsonify, send_file, render_template, url_for, Response
 from flask_cors import CORS
 from convert import convert_file_to_pdf
+from weasyprint import HTML, default_url_fetcher
+from db import get_db_connection
+from formats.html.html_convert import convert_html_to_pdf
+
 
 app = Flask(__name__)
 
@@ -36,7 +40,7 @@ def convert():
     Retorna:
     - JSON con detalles de los archivos convertidos o un archivo PDF directamente.
     """
-    VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg']
+    VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg', '.html', '.htm']
 
     try:
         # Obtiene el tipo de respuesta esperado (JSON por defecto o archivo directo)
@@ -128,7 +132,35 @@ def convert_pdf_to_buffer(pdf_path: str) -> bytes:
     except Exception as e:
         raise ValueError(f"ERROR_READING_PDF: {e}")
 
+@app.route('/api/v1/convert/from-db/<document_id>', methods=['GET'])
+def convert_from_db(document_id):
+    try:
+        # 1. Obtener contenido de MongoDB
+        db = get_db_connection()
+        document = db.paperwork_page.find_one({"_id": document_id})
+ 
+                
+        if not document or "content" not in document:
+            return jsonify({"error": "Documento o contenido no encontrado"}), 404
 
+        # 2. Convertir HTML a PDF
+        pdf_output_path = convert_html_to_pdf(document["content"])
+        pdf_buffer = convert_pdf_to_buffer(pdf_output_path)
+        
+        # 3. Limpieza de archivos temporales
+        os.remove(pdf_output_path)
+
+        return Response(
+            pdf_buffer,
+            mimetype="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{document_id}.pdf"',
+                "Access-Control-Allow-Origin": "*"
+            }
+        )
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
        
 if __name__ == '__main__':
     # Ejecuta el servidor Flask en modo de depuración

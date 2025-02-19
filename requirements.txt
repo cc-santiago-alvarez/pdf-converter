@@ -8,3 +8,5 @@ flask-cors
 python-docx
 weasyprint
 lxml
+pymongo
+flask-pymongo

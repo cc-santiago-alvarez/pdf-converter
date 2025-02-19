@@ -36,6 +36,8 @@ def convert_file_to_pdf(input_path: str) -> str:
             convert_txt_to_pdf(input_path, output_path)
         elif ext in ['.svg', '.png', '.jpg', '.jpeg']:
             convert_image_to_pdf(input_path, output_path)
+        elif ext in ['.html', '.htm']:
+            convert_txt_to_pdf(input_path, output_path)
         else:
             raise ValueError(f"INVALID_FILE_FORMAT: {ext}")
 
