@@ -28,6 +28,11 @@ sudo apt-get install -y \
 brew install cairo pango gdk-pixbuf libffi libxml2 libxslt jpeg
 ```
 
+##### Si hay error con librerías de weasyprint
+```bash
+export DYLD_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_LIBRARY_PATH
+```
+
 #### Windows
 
 1. Instalar [GTK+ Runtime](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases)
@@ -42,6 +47,7 @@ pip3 install -r requirements.txt
 ```bash
 pip3 install Pillow reportlab openpyxl python-pptx svglib flask flask-cors python-docx weasyprint lxml
 ```
+
 
 ## Instalación y Uso
 
