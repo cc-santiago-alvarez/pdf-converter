@@ -29,7 +29,8 @@ git clone https://github.com/tu-usuario/salvarsa-pdf-converter.git
 cd salvarsa-pdf-converter
 ```
 
-### 2. Crear entorno virtual
+### 2. Configurar Entorno Virtual
+
 ```bash
 # Linux/macOS
 python3 -m venv venv
@@ -40,21 +41,46 @@ python -m venv venv
 .\venv\Scripts\activate
 ```
 
-### 3. Instalar dependencias
+### 3. Instalar Dependencias
+
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
+
+# Instalación adicional para conversión de TXT (requiere Node.js)
+pip install pypandoc
 ```
 
-## ▶️ Ejecución
+### 4. Iniciar Servidor Flask
+
 ```bash
 # Linux/macOS
+export FLASK_APP=app.py
 flask run --host=0.0.0.0 --port=25268
 
 # Windows
-python app.py
+set FLASK_APP=app.py
+flask run --host=0.0.0.0 --port=25268
 ```
 
-## 🌐 Uso de la API
+## Estructura del Proyecto
+
+```
+salvarsa-pdf-converter/
+├── app.py                # Punto de entrada principal
+├── convert.py            # Lógica central de conversión
+├── requirements.txt      # Dependencias de Python
+├── formats/              # Módulos de conversión específicos
+│   ├── docx/             # Conversión de Word
+│   ├── images/           # Conversión de imágenes
+│   ├── pptx/             # Conversión de PowerPoint
+│   ├── txt/              # Conversión de texto plano
+│   └── xlsx/             # Conversión de Excel
+├── static/               # Archivos estáticos
+└── templates/            # Plantillas HTML
+```
+
+## Uso de la API
 
 ### Endpoint principal
 - para convertir los formatos [DOCX, XLSX, PPTX, TXT, SVG, PNG, JPG]
@@ -104,7 +130,8 @@ Accede a `http://localhost:25268` para:
 
 ## 🐛 Solución de problemas
 
-### Errores comunes
+### Errores Comunes
+
 1. **Faltan dependencias de sistema**:
    - Síntoma: Errores con `weasyprint` o `cairo`
    - Solución: Instalar librerías listadas en prerrequisitos
