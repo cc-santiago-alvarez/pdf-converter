@@ -1,4 +1,3 @@
-```markdown
 # PDF Converter API
 
 API REST para conversión de documentos a PDF, compatible con múltiples formatos. Desarrollada con Flask y Python.
@@ -187,20 +186,3 @@ salvarsa-pdf-converter/
 
 ## 📄 Licencia
 MIT License - Ver [LICENSE](LICENSE)
-```
-
-Este README incluye:
-1. Requisitos de sistema para todas las plataformas
-2. Instrucciones detalladas de instalación
-3. Ejemplos de uso con Postman
-4. Solución de problemas comunes
-5. Estructura del proyecto y dependencias clave
-6. Información técnica relevante
-7. Guía de contribución y licencia
-
-Para hacerlo más completo, podrías:
-1. Agregar capturas de pantalla en la carpeta `screenshots`
-2. Incluir un archivo LICENSE
-3. Añadir ejemplos con curl
-4. Agregar información de despliegue en producción
-5. Incluir documentación de variables de entorno para configuración
