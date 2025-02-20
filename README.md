@@ -84,7 +84,7 @@ salvarsa-pdf-converter/
 
 ### Endpoint principal
 - para convertir los formatos [DOCX, XLSX, PPTX, TXT, SVG, PNG, JPG]
-```BASH
+```bash
 POST /api/v1/convert/convert-to-pdf
 ```
 
@@ -117,7 +117,7 @@ POST /api/v1/convert/convert-to-pdf
 
 ### Conversión desde MongoDB
 - para convertir los formato HTML
-```BASH
+```bash
 GET /api/v1/convert/from-db/<document_id>
 ```
 
@@ -135,6 +135,10 @@ Accede a `http://localhost:25268` para:
 1. **Faltan dependencias de sistema**:
    - Síntoma: Errores con `weasyprint` o `cairo`
    - Solución: Instalar librerías listadas en prerrequisitos
+   - Solución: en la ruta donde se instan las librerías en macOS
+   ```bash
+   export DYLD_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_LIBRARY_PATH
+   ```
 
 2. **Problemas con MongoDB**:
    - Verificar conexión en `db.py`
