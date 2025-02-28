@@ -13,9 +13,7 @@ from formats.html.html_convert import convert_html_to_pdf
 
 app = Flask(__name__)
 
-# Configura CORS para permitir solicitudes desde cualquier origen en los endpoints de la API
-CORS(app, resources={r"/api/*": {"origins": "*"}})  # Asegúrate de permitir el origen necesario
-app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 
 @app.route('/')
@@ -43,7 +41,6 @@ def convert():
     VALID_EXTENSIONS = ['.docx', '.xlsx', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.svg', '.html', '.htm']
 
     try:
-        # Obtiene el tipo de respuesta esperado (JSON por defecto o archivo directo)
         response_type =  request.args.get('responseType', 'json')
         cond_response_file = response_type == 'file'
 
@@ -103,12 +100,6 @@ def convert():
         status=201
     )
 
-        return jsonify({
-            'success': True,
-            'count': len(results),
-            'files': results
-        })
-
     except Exception as e:
         print("Error:", str(e))
         return jsonify({'error': str(e)}), 500
@@ -132,36 +123,60 @@ def convert_pdf_to_buffer(pdf_path: str) -> bytes:
     except Exception as e:
         raise ValueError(f"ERROR_READING_PDF: {e}")
 
-@app.route('/api/v1/convert/from-db/<document_id>', methods=['GET'])
-def convert_from_db(document_id):
+@app.route('/api/v1/convert/html-to-pdf', methods=['POST'])
+def convert_html():
+    """
+    Endpoint para convertir contenido HTML a formato PDF.
+
+    Proceso:
+    1. Recibe un payload JSON con el campo 'html_content' en el cuerpo de la solicitud.
+    2. Valida la presencia y longitud mínima del contenido HTML (10 caracteres).
+    3. Convierte el HTML a PDF manteniendo estilos originales y formato A4.
+    4. Devuelve la respuesta según el parámetro 'responseType':
+        - Archivo PDF directo si responseType=file (por defecto)
+        - JSON con PDF en base64 si responseType=json
+
+    Parámetros de consulta opcionales:
+    - responseType: Tipo de respuesta (file|json). Default: file
+
+    Retorna:
+    - Respuesta HTTP con PDF como archivo descargable (por defecto)
+    - JSON con estructura {
+        "success": bool,
+        "pdf": "base64_string" (solo si responseType=json),
+        "filename": "documento.pdf"
+      }
+
+    Códigos de estado:
+    - 200: Conversión exitosa
+    - 400: Error en los datos de entrada
+    - 500: Error interno del servidor
+    """
     try:
-        # 1. Obtener contenido de MongoDB
-        db = get_db_connection()
-        document = db.paperwork_page.find_one({"_id": document_id})
- 
-                
-        if not document or "content" not in document:
-            return jsonify({"error": "Documento o contenido no encontrado"}), 404
+        data = request.get_json()
+        if not data or 'html_content' not in data:
+            return jsonify({"error": "html_content es requerido"}), 400
 
-        # 2. Convertir HTML a PDF
-        pdf_output_path = convert_html_to_pdf(document["content"])
-        pdf_buffer = convert_pdf_to_buffer(pdf_output_path)
+        # Validar contenido HTML mínimo
+        if len(data['html_content']) < 10:  # Longitud arbitraria mínima
+            return jsonify({"error": "Contenido HTML inválido"}), 400
+
+        pdf_bytes = convert_html_to_pdf(data['html_content'])
         
-        # 3. Limpieza de archivos temporales
-        os.remove(pdf_output_path)
-
         return Response(
-            pdf_buffer,
+            pdf_bytes,
             mimetype="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{document_id}.pdf"',
-                "Access-Control-Allow-Origin": "*"
+                "Content-Disposition": 'attachment; filename="documento.pdf"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "Content-Security-Policy": "default-src 'self'"
             }
         )
         
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
        
 if __name__ == '__main__':
-    # Ejecuta el servidor Flask en modo de depuración
     app.run(debug=True, host='0.0.0.0', port=25268)

@@ -4,8 +4,8 @@ from bson import errors
 def get_db_connection():
     try:
         client = MongoClient(
-            "mongodb://root:12345abc@localhost:27017/futurapps?authSource=admin&directConnection=true"
+            "mongodb://xxxxxxx@localhost:27017"
         )
-        return client.futurapps
+        return client.database
     except errors.ConnectionFailure as e:
         raise ConnectionError(f"Error de conexión: {str(e)}")
